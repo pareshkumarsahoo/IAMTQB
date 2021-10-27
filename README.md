@@ -1,12 +1,13 @@
 # Identity Access Management
 
-##Getting started
+## Getting started
+
 open the terminal inside the directory after clonig
-##npm install
+### _npm install
 This will install all dependencies in the directory (node modules)
 
-##Run Project
+## Run Project
 In terminal start with 
-##node index.js
+### _node index.js
 
-##Refer the postman collection for all the endpoints
+### _Refer the postman collection for all the endpoints
