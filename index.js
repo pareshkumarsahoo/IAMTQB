@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
-import bcrypt, { hash } from 'bcrypt';
+import jwt from 'jsonwebtoken'; //this package helps us to create an accesstoken
+import bcrypt, { hash } from 'bcrypt'; //this lib is used for encrypting the password
 import cors from "cors";
 
 
@@ -9,8 +9,9 @@ import cors from "cors";
 //app config
 const app = express();
 const PORT = process.env.PORT || 8001;
+//connect with the mongo db 
 const connectionURL  ="mongodb+srv://Admin:Admin123@cluster0.unff6.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-
+//creating a user schema of model
 const user = mongoose.Schema({
     _id:mongoose.Schema.Types.ObjectId,
     userId:String,
@@ -19,7 +20,7 @@ const user = mongoose.Schema({
     isAdmin:Boolean
        
 })
-
+//Static data to sent on API response if AUth is succesful
 const staticData = {
     mainGate:{
         status:'Active',
@@ -107,10 +108,10 @@ const User = mongoose.model('User',user)
 
 //middleware
 app.use(express.json())
-app.use(cors())
+app.use(cors()) //used to allow cross access origin
 
 
-// DB config
+// DB configuration
 mongoose.connect(connectionURL,{
     useNewUrlParser:true,
     useUnifiedTopology:true
@@ -123,10 +124,10 @@ app.get('/api/',(req,res)=>{
     res.status(200).send("IAM API BASE")
 });
 
-//Register
+//Register a user endpoint
 
 app.post('/api/register',(req,res)=>{
-
+        //check if the user exists
     User.find({userId:req.body.userId})
     .exec()
     .then(user =>{
@@ -135,7 +136,7 @@ app.post('/api/register',(req,res)=>{
                 message : "User already exists"
             })
         }else{
-
+            //Using hashing in bcrypt to encrypt the password
             bcrypt.hash(req.body.password,10,(err ,hash)=>{
                 if(err){
                     return res.status(500).json({
@@ -175,7 +176,7 @@ app.post('/api/register',(req,res)=>{
 
 
 
-//Login
+//Login user endpoint with userId and password
 
 app.post('/api/login', (req,res)=>{
     User.find({userId:req.body.userId})
@@ -186,6 +187,7 @@ app.post('/api/login', (req,res)=>{
                 message : "No User Exist with this UserId"
             })
         }else{
+            //compare the hashed passcode with the password recived in the request
             bcrypt.compare(req.body.password,user[0].password,(err,result)=>{
                 if(err){
                     return res.status(401).json({
@@ -194,6 +196,7 @@ app.post('/api/login', (req,res)=>{
                         err:err
                     })
                 }
+                //after succesfull comparision a json web token is generated with some payload like usedid or id
                 if(result){
                    const token = jwt.sign({
                         name:user[0].userId,
@@ -277,6 +280,7 @@ app.get('/api/accessRouter', verifyToken, (req,res)=>{
                 message:'Access Denied'
             })
         }else{
+            //check if the authorized user is a ADMIN 
             if(authData.isAdmin){
                 res.status(200).send(staticData.routers);
             }else{
@@ -291,7 +295,7 @@ app.get('/api/accessRouter', verifyToken, (req,res)=>{
 })
 
 
-
+//this function is a sed verify the token to validate if the req is from a authorized user or not
 function verifyToken(req ,res ,next){
     const bearerHeader = req.headers['authorization'];
     if(typeof bearerHeader !== 'undefined'){
@@ -311,6 +315,6 @@ function verifyToken(req ,res ,next){
 
 
 
-//listner
+//to start the server
 app.listen(PORT,()=>console.log(`listning on local host ${PORT}`))
 
